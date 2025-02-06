@@ -1,7 +1,7 @@
 "use client";
 
 import { shadeColor } from "@/utils/color-utils";
-import { radToDeg } from "@/utils/math-utils";
+import { degToRad, radToDeg } from "@/utils/math-utils";
 import { useRef, useEffect, useState, useCallback } from "react";
 
 interface WheelProps {
@@ -158,13 +158,13 @@ export default function WheelOfFortune({ items, onSelectItem }: WheelProps) {
         const progress = elapsedTime / spinDuration;
         const easeOut = 1 - Math.pow(1 - progress, 3); // Cubic ease out
         const currentRotation =
-          startRotation + totalRotation * easeOut * (Math.PI / 180);
+          startRotation +  degToRad(totalRotation * easeOut);
         setRotation(currentRotation);
         requestAnimationFrame(spin);
       } else {
         setIsSpinning(false);
         const finalRotation =
-          (startRotation + totalRotation * (Math.PI / 180)) % (2 * Math.PI);
+          (startRotation + degToRad(totalRotation)) % (2 * Math.PI);
         console.log(radToDeg(startRotation), radToDeg(totalRotation));
         console.log(radToDeg(finalRotation));
         const selectedIndex =
