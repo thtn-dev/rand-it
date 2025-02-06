@@ -1,8 +1,9 @@
 "use client";
 
 import { shadeColor } from "@/utils/color-utils";
-import { degToRad, radToDeg } from "@/utils/math-utils";
+import { degToRad } from "@/utils/math-utils";
 import { useRef, useEffect, useState, useCallback } from "react";
+import { Button } from "../ui/button";
 
 interface WheelProps {
   items: string[];
@@ -18,11 +19,14 @@ const COLORS = [
   "#ad11ff",
 ];
 
+const CIRCLE_PI = 2 * Math.PI;
+const startRotation = Math.random() * CIRCLE_PI;
+const arrowDirection = Math.PI / 2;
 export default function WheelOfFortune({ items, onSelectItem }: WheelProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [rotation, setRotation] = useState(0); // radians
+  const [rotation, setRotation] = useState(startRotation); // radians
   const [isSpinning, setIsSpinning] = useState(false);
-  const [isSlowSpinning, setIsSlowSpinning] = useState(false);
+  const [isSlowSpinning, setIsSlowSpinning] = useState(true);
   const [hasSpunOnce, setHasSpunOnce] = useState(false);
   const slowSpinRef = useRef<number | null>(null);
 
@@ -32,8 +36,6 @@ export default function WheelOfFortune({ items, onSelectItem }: WheelProps) {
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
-    
   }, []);
 
   const drawWheel = useCallback(() => {
@@ -45,11 +47,11 @@ export default function WheelOfFortune({ items, onSelectItem }: WheelProps) {
 
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
-    const radius = Math.min(centerX, centerY) - 10;
+    const radius = Math.min(centerX, centerY);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     items.forEach((item, index) => {
-      const angle = (2 * Math.PI) / items.length;
+      const angle = CIRCLE_PI / items.length;
       const startAngle = rotation + angle * index;
       const endAngle = rotation + angle * (index + 1);
 
@@ -81,13 +83,13 @@ export default function WheelOfFortune({ items, onSelectItem }: WheelProps) {
       ctx.shadowBlur = 2;
       ctx.shadowOffsetX = 1;
       ctx.shadowOffsetY = 1;
-      ctx.fillText(item, radius - 20, 0);
+      ctx.fillText(index + " " + item, radius - 20, 0);
       ctx.restore();
     });
 
     ctx.save();
     ctx.translate(centerX, centerY);
-    ctx.rotate(Math.PI);
+    ctx.rotate(arrowDirection);
     ctx.beginPath();
     ctx.moveTo(-120, 0);
     ctx.lineTo(-62, -36);
@@ -95,7 +97,7 @@ export default function WheelOfFortune({ items, onSelectItem }: WheelProps) {
     ctx.closePath();
     ctx.fillStyle = "#333";
     ctx.fill();
-    
+
     // shadow
     ctx.shadowColor = "rgba(0,0,0,0.5)";
     ctx.shadowBlur = 12;
@@ -103,9 +105,9 @@ export default function WheelOfFortune({ items, onSelectItem }: WheelProps) {
     ctx.shadowOffsetY = 3;
     ctx.fill();
     ctx.restore();
-    
+
     ctx.beginPath();
-    ctx.arc(centerX, centerY, 80, 0, 2 * Math.PI);
+    ctx.arc(centerX, centerY, 80, 0, CIRCLE_PI);
     ctx.fillStyle = "#FFFFFF";
     ctx.fill();
     // stroke
@@ -116,7 +118,7 @@ export default function WheelOfFortune({ items, onSelectItem }: WheelProps) {
   }, [items, rotation]);
 
   const slowSpin = useCallback(() => {
-    setRotation((prevRotation) => (prevRotation + 0.003333333) % (2 * Math.PI));
+    setRotation((prevRotation) => (prevRotation + 0.003333333) % CIRCLE_PI);
     slowSpinRef.current = requestAnimationFrame(slowSpin);
   }, []);
 
@@ -143,12 +145,7 @@ export default function WheelOfFortune({ items, onSelectItem }: WheelProps) {
     setIsSpinning(true);
     const spinDuration = 5000; // 5s
     const startRotation = rotation;
-    const totalRotation =
-      360 * 5 + 
-      Math.random() * 360 +
-      Math.random() * 180 +
-      Math.random() * 90 +
-      Math.random() * 45;
+    const totalRotation = 360 * 5 + Math.random() * 360;
 
     const startTime = performance.now();
 
@@ -158,19 +155,19 @@ export default function WheelOfFortune({ items, onSelectItem }: WheelProps) {
         const progress = elapsedTime / spinDuration;
         const easeOut = 1 - Math.pow(1 - progress, 3); // Cubic ease out
         const currentRotation =
-          startRotation +  degToRad(totalRotation * easeOut);
+          startRotation + degToRad(totalRotation * easeOut);
         setRotation(currentRotation);
         requestAnimationFrame(spin);
       } else {
         setIsSpinning(false);
         const finalRotation =
-          (startRotation + degToRad(totalRotation)) % (2 * Math.PI);
-        console.log(radToDeg(startRotation), radToDeg(totalRotation));
-        console.log(radToDeg(finalRotation));
+          (startRotation + degToRad(totalRotation) + arrowDirection) %
+          CIRCLE_PI;
+
         const selectedIndex =
           items.length -
           1 -
-          Math.floor((finalRotation / (2 * Math.PI)) * items.length);
+          Math.floor((finalRotation / CIRCLE_PI) * items.length);
         onSelectItem(items[selectedIndex]);
       }
     };
@@ -184,15 +181,12 @@ export default function WheelOfFortune({ items, onSelectItem }: WheelProps) {
         ref={canvasRef}
         width={868}
         height={868}
-        className="mb-4 w-full"
-      />
-      <button
+        className="mb-4 w-full cursor-pointer rounded-full"
         onClick={spinWheel}
-        disabled={isSpinning}
-        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
-      >
+      />
+      {/* <Button onClick={spinWheel} disabled={isSpinning}>
         {isSpinning ? "Đang quay..." : "Quay"}
-      </button>
+      </Button> */}
     </div>
   );
 }
