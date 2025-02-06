@@ -8,12 +8,11 @@ function SpinWheelGamePage() {
     "AirPods Pro",
     "Apple Watch",
     "iPhone 12",
-    "iPad Pro",
-    "iPad Pro Max",
+    "Cái nịt",
   ];
 
   const handleSelectedItem = (item: string) => {
-    alert(`Chúc mừng bạn đã trúng ${item}`);
+    alert(`Chúc mừng Quỳnh Thương đã trúng ${item}`);
   };
 
   return (
